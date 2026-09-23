@@ -40,6 +40,10 @@
         <td align="left"><input type="text" size="9" id="heures" value="39"></td>
       </tr>
       <tr>
+        <td align="right">Semaines travaillées par an (sem) :</td>
+        <td align="left"><input type="text" size="9" id="semaines" value="47"></td>
+      </tr>
+      <tr>
         <td></td>
         <td align="left"><input type="submit" value="Calculer" id="calculer"></td>
       </tr>
@@ -73,7 +77,7 @@
     <font size="2">
       <b>TT</b> = jours de télétravail par semaine (0 à 5).<br>
       Salaire horaire réel = (brut annuel − coût des trajets) ÷ (heures travaillées + temps de trajet).<br>
-      Trajet aller-retour, 5 jours/semaine, 47 semaines/an.
+      Trajet aller-retour, 5 jours/semaine.
     </font>
   </p>
 
@@ -87,7 +91,6 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
 $(function () {
-  var SEMAINES = 47;   // semaines travaillées par an
   var JOURS = 5;       // jours travaillés par semaine
 
   function val(id) {
@@ -105,14 +108,15 @@ $(function () {
     var carburant = val('carburant');
     var conso = val('conso');
     var heures = val('heures');
+    var semaines = val('semaines');
 
-    var champs = [salaire, distance, temps, carburant, conso, heures];
+    var champs = [salaire, distance, temps, carburant, conso, heures, semaines];
     if (champs.some(isNaN)) {
       alert('Veuillez remplir tous les champs avec des nombres.');
       return false;
     }
-    if (salaire <= 0 || heures <= 0) {
-      alert('La rémunération et les heures doivent être supérieures à 0.');
+    if (salaire <= 0 || heures <= 0 || semaines <= 0) {
+      alert('La rémunération, les heures et les semaines doivent être supérieures à 0.');
       return false;
     }
     if (distance < 0 || temps < 0 || carburant < 0 || conso < 0) {
@@ -120,7 +124,7 @@ $(function () {
       return false;
     }
 
-    var heuresAn = heures * SEMAINES;
+    var heuresAn = heures * semaines;
     var theorique = salaire / heuresAn;
 
     // aller-retour par jour
@@ -132,7 +136,7 @@ $(function () {
     var corps = $('#corps').empty();
     for (var tt = 0; tt <= 5; tt++) {
       var joursBureau = JOURS - tt;
-      var joursAn = joursBureau * SEMAINES;
+      var joursAn = joursBureau * semaines;
       var coutAn = coutJour * joursAn;
       var tempsAnH = tempsJourH * joursAn;
       var heuresReelles = heuresAn + tempsAnH;
