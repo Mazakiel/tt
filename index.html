@@ -63,11 +63,11 @@
     <thead>
       <tr bgcolor="#D0D0D0">
         <th>Jours TT</th>
-        <th>Jours bureau</th>
         <th>Coût trajet / jour</th>
         <th>Coût trajet / an</th>
         <th>Temps trajet / an</th>
         <th>Salaire horaire réel</th>
+        <th>Brut annuel équivalent</th>
       </tr>
     </thead>
     <tbody id="corps"></tbody>
@@ -77,7 +77,8 @@
     <font size="2">
       <b>TT</b> = jours de télétravail par semaine (0 à 5).<br>
       Salaire horaire réel = (brut annuel − coût des trajets) ÷ (heures travaillées + temps de trajet).<br>
-      Salaire horaire théorique sur 52 semaines/an. Trajet aller-retour, 5 jours/semaine, hors semaines de congés.
+      Salaire horaire théorique sur 52 semaines/an. Trajet aller-retour, 5 jours/semaine, hors semaines de congés.<br>
+      Brut annuel équivalent = brut qui donnerait le même salaire horaire réel, sans trajet.
     </font>
   </p>
 
@@ -141,7 +142,7 @@ $(function () {
     $('#theorique').text(fmt(theorique) + ' €/h');
 
     var corps = $('#corps').empty();
-    for (var tt = 0; tt <= 5; tt++) {
+    for (var tt = 5; tt >= 0; tt--) {
       var joursBureau = JOURS - tt;
       var joursAn = joursBureau * semainesTrajet;
       var coutAn = coutJour * joursAn;
@@ -149,14 +150,15 @@ $(function () {
       var heuresReelles = heuresAn + tempsAnH;
       var net = salaire - coutAn;
       var reel = net / heuresReelles;
+      var brutEquiv = reel * heuresAn;
 
       var tr = $('<tr>');
       tr.append($('<td align="center">').text(tt));
-      tr.append($('<td align="center">').text(joursBureau));
       tr.append($('<td align="right">').text(fmt(coutJour) + ' €'));
       tr.append($('<td align="right">').text(fmt(coutAn) + ' €'));
       tr.append($('<td align="right">').text(fmt(tempsAnH) + ' h'));
       tr.append($('<td align="right">').html('<b>' + fmt(reel) + ' €/h</b>'));
+      tr.append($('<td align="right">').text(fmt(brutEquiv) + ' €'));
       if (tt === 5) { tr.attr('bgcolor', '#CCFFCC'); } // télétravail complet
       corps.append(tr);
     }
