@@ -103,32 +103,30 @@ $(function () {
     return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  function calculer() {
-    var salaire = val('salaire');
-    var distance = val('distance');
-    var temps = val('temps');
-    var carburant = val('carburant');
-    var conso = val('conso');
-    var heures = val('heures');
-    var conges = val('conges');
+  var CHAMPS = ['salaire', 'distance', 'temps', 'carburant', 'conso', 'heures', 'conges'];
+  var CLE = 'tt:';
 
-    var champs = [salaire, distance, temps, carburant, conso, heures, conges];
-    if (champs.some(isNaN)) {
-      alert('Veuillez remplir tous les champs avec des nombres.');
-      return false;
-    }
-    if (salaire <= 0 || heures <= 0) {
-      alert('La rémunération et les heures doivent être supérieures à 0.');
-      return false;
-    }
-    if (conges < 0 || conges > 52) {
-      alert('Les semaines de congés doivent être entre 0 et 52.');
-      return false;
-    }
-    if (distance < 0 || temps < 0 || carburant < 0 || conso < 0) {
-      alert('Les valeurs ne peuvent pas être négatives.');
-      return false;
-    }
+  function lire() {
+    var v = {};
+    $.each(CHAMPS, function (_, id) { v[id] = val(id); });
+    return v;
+  }
+
+  function erreur(v) {
+    if (CHAMPS.some(function (id) { return isNaN(v[id]); })) return 'Veuillez remplir tous les champs avec des nombres.';
+    if (v.salaire <= 0 || v.heures <= 0) return 'La rémunération et les heures doivent être supérieures à 0.';
+    if (v.conges < 0 || v.conges > 52) return 'Les semaines de congés doivent être entre 0 et 52.';
+    if (v.distance < 0 || v.temps < 0 || v.carburant < 0 || v.conso < 0) return 'Les valeurs ne peuvent pas être négatives.';
+    return null;
+  }
+
+  function calculer() {
+    var v = lire();
+    var msg = erreur(v);
+    if (msg) { alert(msg); return false; }
+
+    var salaire = v.salaire, distance = v.distance, temps = v.temps,
+        carburant = v.carburant, conso = v.conso, heures = v.heures, conges = v.conges;
 
     var heuresAn = heures * SEMAINES;        // base théorique : 52 semaines (congés inclus)
     var theorique = salaire / heuresAn;
@@ -165,7 +163,23 @@ $(function () {
     return false;
   }
 
+  // restaure les valeurs sauvegardées
+  $.each(CHAMPS, function (_, id) {
+    var s = localStorage.getItem(CLE + id);
+    if (s !== null) { $('#' + id).val(s); }
+  });
+
+  // sauvegarde à chaque saisie
+  $.each(CHAMPS, function (_, id) {
+    $('#' + id).on('input change', function () {
+      localStorage.setItem(CLE + id, $(this).val());
+    });
+  });
+
   $('#form').on('submit', calculer);
+
+  // recalcule automatiquement si une saisie complète a été restaurée
+  if (!erreur(lire())) { calculer(); }
 });
 </script>
 
