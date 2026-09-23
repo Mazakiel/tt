@@ -81,7 +81,6 @@
     <thead>
       <tr bgcolor="#D0D0D0">
         <th>Jours TT</th>
-        <th>Coût trajet / jour</th>
         <th>Coût trajet / an</th>
         <th>Temps trajet / an</th>
         <th>Salaire horaire réel</th>
@@ -224,7 +223,6 @@ $(function () {
 
       var tr = $('<tr>');
       tr.append($('<td align="center">').text(tt));
-      tr.append($('<td align="right">').text(fmt(coutJour) + ' €'));
       tr.append($('<td align="right">').text(fmt(coutAn) + ' €'));
       tr.append($('<td align="right">').text(fmt(tempsAnH) + ' h'));
       tr.append($('<td align="right">').html('<b>' + fmt(reel) + ' €/h</b>'));
