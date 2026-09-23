@@ -28,8 +28,15 @@
         <td align="left"><input type="text" size="9" id="temps"></td>
       </tr>
       <tr>
-        <td align="right">Coût du carburant (€/L) :</td>
-        <td align="left"><input type="text" size="9" id="carburant"></td>
+        <td align="right">Carburant :</td>
+        <td align="left">
+          <select id="type_carburant">
+            <option value="essence">Essence (SP95-E10)</option>
+            <option value="diesel">Diesel (Gazole)</option>
+            <option value="autre">Autre</option>
+          </select>
+          <input type="text" size="9" id="carburant" title="€/L">
+        </td>
       </tr>
       <tr>
         <td align="right">Consommation (L / 100 km) :</td>
@@ -113,6 +120,43 @@ $(function () {
   var CHAMPS = ['salaire', 'distance', 'temps', 'carburant', 'conso', 'heures', 'conges'];
   var CLE = 'tt:';
 
+  var PRIX = null;   // { E10: x, Gazole: y, ... } chargé depuis l'API publique
+
+  function nomCarburant(type) {
+    if (type === 'essence') return 'E10';
+    if (type === 'diesel') return 'Gazole';
+    return null;
+  }
+
+  function appliquerTypeCarburant() {
+    var type = $('#type_carburant').val();
+    var nom = nomCarburant(type);
+    if (nom && PRIX && PRIX[nom] !== undefined) {
+      $('#carburant').val(PRIX[nom].toFixed(2).replace('.', ',')).prop('disabled', true);
+    } else if (type === 'autre') {
+      $('#carburant').prop('disabled', false);
+    } else {
+      $('#carburant').prop('disabled', true); // API pas encore chargée
+    }
+  }
+
+  function chargerPrixCarburant() {
+    var url = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-carburants-quotidien/records'
+            + '?select=avg(prix_valeur)%20as%20moyenne'
+            + '&group_by=prix_nom'
+            + '&where=prix_valeur%20is%20not%20null';
+    $.getJSON(url)
+      .done(function (data) {
+        PRIX = {};
+        $.each(data.results, function (_, r) { PRIX[r.prix_nom] = r.moyenne; });
+        appliquerTypeCarburant();
+        if (!erreur(lire())) { calculer(); }
+      })
+      .fail(function () {
+        $('#carburant').prop('disabled', false); // API indisponible : saisie manuelle
+      });
+  }
+
   function lire() {
     var v = {};
     $.each(CHAMPS, function (_, id) { v[id] = val(id); });
@@ -181,6 +225,8 @@ $(function () {
     var s = localStorage.getItem(CLE + id);
     if (s !== null) { $('#' + id).val(s); }
   });
+  var typeSauve = localStorage.getItem(CLE + 'type_carburant');
+  if (typeSauve) { $('#type_carburant').val(typeSauve); }
 
   // sauvegarde à chaque saisie
   $.each(CHAMPS, function (_, id) {
@@ -189,7 +235,16 @@ $(function () {
     });
   });
 
+  $('#type_carburant').on('change', function () {
+    localStorage.setItem(CLE + 'type_carburant', $(this).val());
+    appliquerTypeCarburant();
+  });
+
   $('#form').on('submit', calculer);
+
+  // état initial du champ carburant selon le type, puis prix via l'API publique
+  appliquerTypeCarburant();
+  chargerPrixCarburant();
 
   // recalcule automatiquement si une saisie complète a été restaurée
   if (!erreur(lire())) { calculer(); }
