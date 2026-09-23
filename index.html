@@ -31,9 +31,13 @@
         <td align="right">Carburant :</td>
         <td align="left">
           <select id="type_carburant">
-            <option value="essence">Essence (SP95-E10)</option>
-            <option value="diesel">Diesel (Gazole)</option>
-            <option value="autre">Autre</option>
+            <option value="E10" data-label="SP95-E10">SP95-E10</option>
+            <option value="SP95" data-label="SP95">SP95</option>
+            <option value="SP98" data-label="SP98">SP98</option>
+            <option value="Gazole" data-label="Diesel (Gazole)">Diesel (Gazole)</option>
+            <option value="E85" data-label="Éthanol (E85)">Éthanol (E85)</option>
+            <option value="GPLc" data-label="GPL">GPL</option>
+            <option value="autre" data-label="Autre (manuel)">Autre (manuel)</option>
           </select>
           <input type="text" size="9" id="carburant" title="€/L">
         </td>
@@ -122,22 +126,31 @@ $(function () {
 
   var PRIX = null;   // { E10: x, Gazole: y, ... } chargé depuis l'API publique
 
-  function nomCarburant(type) {
-    if (type === 'essence') return 'E10';
-    if (type === 'diesel') return 'Gazole';
-    return null;
+  function prixCarburant() {
+    var type = $('#type_carburant').val();
+    if (type === 'autre') return val('carburant');
+    if (PRIX && PRIX[type] !== undefined) return PRIX[type];
+    return NaN; // API pas encore chargée
   }
 
   function appliquerTypeCarburant() {
-    var type = $('#type_carburant').val();
-    var nom = nomCarburant(type);
-    if (nom && PRIX && PRIX[nom] !== undefined) {
-      $('#carburant').val(PRIX[nom].toFixed(2).replace('.', ',')).prop('disabled', true);
-    } else if (type === 'autre') {
-      $('#carburant').prop('disabled', false);
+    if ($('#type_carburant').val() === 'autre') {
+      $('#carburant').prop('disabled', false).show();
     } else {
-      $('#carburant').prop('disabled', true); // API pas encore chargée
+      $('#carburant').prop('disabled', true).hide();
     }
+  }
+
+  function majLibellesPrix() {
+    $('#type_carburant option').each(function () {
+      var v = $(this).val();
+      var label = $(this).data('label');
+      if (v !== 'autre' && PRIX && PRIX[v] !== undefined) {
+        $(this).text(label + ' — ' + PRIX[v].toFixed(2).replace('.', ',') + ' €/L');
+      } else {
+        $(this).text(label);
+      }
+    });
   }
 
   function chargerPrixCarburant() {
@@ -149,17 +162,19 @@ $(function () {
       .done(function (data) {
         PRIX = {};
         $.each(data.results, function (_, r) { PRIX[r.prix_nom] = r.moyenne; });
+        majLibellesPrix();
         appliquerTypeCarburant();
         if (!erreur(lire())) { calculer(); }
       })
       .fail(function () {
-        $('#carburant').prop('disabled', false); // API indisponible : saisie manuelle
+        appliquerTypeCarburant(); // API indisponible : sélectionner « Autre » pour saisir le prix
       });
   }
 
   function lire() {
     var v = {};
     $.each(CHAMPS, function (_, id) { v[id] = val(id); });
+    v.carburant = prixCarburant(); // prix effectif : API si carburant sélectionné, sinon manuel
     return v;
   }
 
@@ -226,7 +241,9 @@ $(function () {
     if (s !== null) { $('#' + id).val(s); }
   });
   var typeSauve = localStorage.getItem(CLE + 'type_carburant');
-  if (typeSauve) { $('#type_carburant').val(typeSauve); }
+  if (typeSauve && $('#type_carburant option[value="' + typeSauve + '"]').length) {
+    $('#type_carburant').val(typeSauve);
+  }
 
   // sauvegarde à chaque saisie
   $.each(CHAMPS, function (_, id) {
