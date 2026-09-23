@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TT — Vraie rémunération</title>
+</head>
+<body bgcolor="#C0C0C0" text="#000000">
+
+<center>
+
+  <h1><font color="#000080" face="Arial">TT — Vraie rémunération</font></h1>
+  <marquee width="420" scrollamount="4"><font color="#800000" size="2"><b>~ Combien vaut réellement votre heure, une fois le trajet compté ? ~</b></font></marquee>
+  <hr width="520">
+
+  <form id="form" action="#" onsubmit="return false;">
+    <table border="0" cellpadding="4" cellspacing="2">
+      <tr>
+        <td align="right">Rémunération brute annuelle (€) :</td>
+        <td align="left"><input type="text" size="9" id="salaire" value="45000"></td>
+      </tr>
+      <tr>
+        <td align="right">Distance du trajet (km, aller simple) :</td>
+        <td align="left"><input type="text" size="9" id="distance" value="30"></td>
+      </tr>
+      <tr>
+        <td align="right">Temps de trajet (min, aller simple) :</td>
+        <td align="left"><input type="text" size="9" id="temps" value="45"></td>
+      </tr>
+      <tr>
+        <td align="right">Coût du carburant (€/L) :</td>
+        <td align="left"><input type="text" size="9" id="carburant" value="1.80"></td>
+      </tr>
+      <tr>
+        <td align="right">Consommation (L / 100 km) :</td>
+        <td align="left"><input type="text" size="9" id="conso" value="6"></td>
+      </tr>
+      <tr>
+        <td align="right">Heures de travail par semaine (h) :</td>
+        <td align="left"><input type="text" size="9" id="heures" value="39"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td align="left"><input type="submit" value="Calculer" id="calculer"></td>
+      </tr>
+    </table>
+  </form>
+
+  <hr width="520">
+
+  <h2><font color="#000080" face="Arial">Résultats</font></h2>
+
+  <p>
+    Salaire horaire <b>théorique</b> :
+    <font size="+1" color="#000080"><b id="theorique">—</b></font>
+  </p>
+
+  <table border="1" cellspacing="0" cellpadding="4" bgcolor="#FFFFFF">
+    <thead>
+      <tr bgcolor="#D0D0D0">
+        <th>Jours TT</th>
+        <th>Jours bureau</th>
+        <th>Coût trajet / jour</th>
+        <th>Coût trajet / an</th>
+        <th>Temps trajet / an</th>
+        <th>Salaire horaire réel</th>
+      </tr>
+    </thead>
+    <tbody id="corps"></tbody>
+  </table>
+
+  <p>
+    <font size="2">
+      <b>TT</b> = jours de télétravail par semaine (0 à 5).<br>
+      Salaire horaire réel = (brut annuel − coût des trajets) ÷ (heures travaillées + temps de trajet).<br>
+      Trajet aller-retour, 5 jours/semaine, 47 semaines/an.
+    </font>
+  </p>
+
+  <hr width="420">
+  <font size="1" color="#444444">
+    Visiteurs : 000042 · Meilleure résolution : 800×600 · © 2001 TT
+  </font>
+
+</center>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(function () {
+  var SEMAINES = 47;   // semaines travaillées par an
+  var JOURS = 5;       // jours travaillés par semaine
+
+  function val(id) {
+    return parseFloat($('#' + id).val().replace(',', '.'));
+  }
+
+  function fmt(n) {
+    return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function calculer() {
+    var salaire = val('salaire');
+    var distance = val('distance');
+    var temps = val('temps');
+    var carburant = val('carburant');
+    var conso = val('conso');
+    var heures = val('heures');
+
+    var champs = [salaire, distance, temps, carburant, conso, heures];
+    if (champs.some(isNaN)) {
+      alert('Veuillez remplir tous les champs avec des nombres.');
+      return false;
+    }
+    if (salaire <= 0 || heures <= 0) {
+      alert('La rémunération et les heures doivent être supérieures à 0.');
+      return false;
+    }
+    if (distance < 0 || temps < 0 || carburant < 0 || conso < 0) {
+      alert('Les valeurs ne peuvent pas être négatives.');
+      return false;
+    }
+
+    var heuresAn = heures * SEMAINES;
+    var theorique = salaire / heuresAn;
+
+    // aller-retour par jour
+    var coutJour = (2 * distance) * conso / 100 * carburant; // € / jour
+    var tempsJourH = (2 * temps) / 60;                        // h / jour
+
+    $('#theorique').text(fmt(theorique) + ' €/h');
+
+    var corps = $('#corps').empty();
+    for (var tt = 0; tt <= 5; tt++) {
+      var joursBureau = JOURS - tt;
+      var joursAn = joursBureau * SEMAINES;
+      var coutAn = coutJour * joursAn;
+      var tempsAnH = tempsJourH * joursAn;
+      var heuresReelles = heuresAn + tempsAnH;
+      var net = salaire - coutAn;
+      var reel = net / heuresReelles;
+
+      var tr = $('<tr>');
+      tr.append($('<td align="center">').text(tt));
+      tr.append($('<td align="center">').text(joursBureau));
+      tr.append($('<td align="right">').text(fmt(coutJour) + ' €'));
+      tr.append($('<td align="right">').text(fmt(coutAn) + ' €'));
+      tr.append($('<td align="right">').text(fmt(tempsAnH) + ' h'));
+      tr.append($('<td align="right">').html('<b>' + fmt(reel) + ' €/h</b>'));
+      if (tt === 5) { tr.attr('bgcolor', '#CCFFCC'); } // télétravail complet
+      corps.append(tr);
+    }
+    return false;
+  }
+
+  $('#form').on('submit', calculer);
+  calculer();
+});
+</script>
+
+</body>
+</html>
