@@ -17,27 +17,27 @@
     <table border="0" cellpadding="4" cellspacing="2">
       <tr>
         <td align="right">Rémunération brute annuelle (€) :</td>
-        <td align="left"><input type="text" size="9" id="salaire" value="45000"></td>
+        <td align="left"><input type="text" size="9" id="salaire"></td>
       </tr>
       <tr>
         <td align="right">Distance du trajet (km, aller simple) :</td>
-        <td align="left"><input type="text" size="9" id="distance" value="30"></td>
+        <td align="left"><input type="text" size="9" id="distance"></td>
       </tr>
       <tr>
         <td align="right">Temps de trajet (min, aller simple) :</td>
-        <td align="left"><input type="text" size="9" id="temps" value="45"></td>
+        <td align="left"><input type="text" size="9" id="temps"></td>
       </tr>
       <tr>
         <td align="right">Coût du carburant (€/L) :</td>
-        <td align="left"><input type="text" size="9" id="carburant" value="1.80"></td>
+        <td align="left"><input type="text" size="9" id="carburant"></td>
       </tr>
       <tr>
         <td align="right">Consommation (L / 100 km) :</td>
-        <td align="left"><input type="text" size="9" id="conso" value="6"></td>
+        <td align="left"><input type="text" size="9" id="conso"></td>
       </tr>
       <tr>
         <td align="right">Heures de travail par semaine (h) :</td>
-        <td align="left"><input type="text" size="9" id="heures" value="39"></td>
+        <td align="left"><input type="text" size="9" id="heures" value="35"></td>
       </tr>
       <tr>
         <td align="right">Semaines de congés par an (sem) :</td>
@@ -166,7 +166,6 @@ $(function () {
   }
 
   $('#form').on('submit', calculer);
-  calculer();
 });
 </script>
 
